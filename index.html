@@ -12,7 +12,9 @@
           data = data.split('\n');
           var idata = [];
           for(var d = 0; d < data.length; d++) {
-            idata.push(parseInt(data[d]));
+            if(data[d].length > 0) {
+              idata.push(parseInt(data[d]));
+            }
           }
           data = idata;
           plot(data);
