@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<head>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script>
+    $(function() {
+      var scale = 100;
+      var $map = $("#map");
+
+      window.load = function(f, re) {
+        $.get(f + ".digest1.size0.swap0." + re + ".digestion", function(data, status) {
+          data = data.split('\n');
+          var idata = [];
+          for(var d = 0; d < data.length; d++) {
+            idata.push(parseInt(data[d]));
+          }
+          data = idata;
+          plot(data);
+          updateMap(data);
+        });
+      }
+
+      window.plot = function(data) {
+        var windows = 25;
+        var min = Math.min.apply(null, data);
+        var max = Math.max.apply(null, data);
+        var block_size = (max - min) / windows;
+        console.log("min", min);
+        console.log("max", max);
+        console.log("block size", block_size);
+        var hist = [['size', 'count']];
+        for(var i = 0; i < windows; i++) {
+          hist.push([i*block_size, 0]);
+        }
+        for(var d = 0; d < data.length; d++) {
+          hist[parseInt(Math.min((data[d] - min) / block_size, windows-1)) + 1][1]++;
+        }
+        console.log("hist", hist);
+
+        var data = new google.visualization.arrayToDataTable(hist);
+
+        var options = {
+          width: 500,
+          chart: {
+            title: 'Fragment size histogram'
+          },
+        };
+
+        var chart = new google.charts.Bar(document.getElementById('plot'));
+        chart.draw(data, options);
+      }
+
+      window.updateMap = function(data) {
+        $map.empty();
+        for(var d = 0; d < data.length; d++) {
+          var block = $("<div>");
+          block.addClass("bar");
+          block.width(data[d] / scale);
+          block.append(data[d]);
+          var font = 10;
+          while(data[d] / scale < (''+data[d]).length * font) {
+            font--;
+          }
+          block.css("font-size", font*2);
+          $map.append(block);
+        }
+      }
+    });
+
+    google.load("visualization", "1.1", {packages:["bar"]});
+  </script>
+  <style>
+    body {
+      font-family: courier;
+    }
+    .btn {
+      color: blue;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    #map {
+      border: 2px solid #000000;
+      overflow: scroll;
+      padding: 10px;
+    }
+    .bar {
+      display: inline-block;
+      height: 25px;
+      border: 1px solid #0000ff;
+      background-color: #4455ff;
+      margin-right: 5px;
+      padding: 5px;
+      vertical-align: top;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Restriction maps</h2>
+  Pick a sample w/restriction enzyme:
+  <br/>
+  <ul>
+    <li> <a class="btn" onclick="load('e_coli_mg1655', 'hind3')">E. coli MG1655 (HindIII)</a></li>
+    <li> <a class="btn" onclick="load('e_coli_mg1655', 'sma1')">E. coli MG1655 (SmaI)</a></li>
+    <li> <a class="btn" onclick="load('e_coli_w3110', 'hind3')">E. coli W3110 (HindIII)</a></li>
+    <li> <a class="btn" onclick="load('e_coli_w3110', 'sma1')">E. coli W3110 (SmaI)</a></li>
+    <li> <a class="btn" onclick="load('s_aureus_atcc_25923', 'hind3')">S. aureus ATCC 25923 (HindIII)</a></li>
+    <li> <a class="btn" onclick="load('s_aureus_atcc_25923', 'sma1')">S. aureus ATCC 25923 (SmaI)</a></li>
+    <li> <a class="btn" onclick="load('s_cerevisiae_s288c', 'hind3')">S. cerevisiae s288c (HindIII)</a> (large file, be patient)</li>
+    <li> <a class="btn" onclick="load('s_cerevisiae_s288c', 'sma1')">S. cerevisiae s288c (SmaI)</a> (large file, be patient)</li>
+    <li> <a class="btn" onclick="load('s_thermophilus_lmg_18311', 'hind3')">S. thermophilus LMG 18311 (HindIII)</a></li>
+    <li> <a class="btn" onclick="load('s_thermophilus_lmg_18311', 'sma1')">S. thermophilus LMG 18311 (SmaI)</a></li>
+    <li> <a class="btn" onclick="load('t_thermophilus_hb8', 'hind3')">T. thermophilus HB8 (HindIII)</a></li>
+    <li> <a class="btn" onclick="load('t_thermophilus_hb8', 'sma1')">T. thermophilus HB8 (SmaI)</a> (large file, be patient)</li>
+    <li> <a class="btn" onclick="load('hg19.chr22', 'hind3')">Human Chrom 22 (HindIII)</a> (large file, be patient)</li>
+    <li> <a class="btn" onclick="load('hg19.chr22', 'sma1')">Human Chrom 22 (SmaI)</a> (large file, be patient)</li>
+  </ul>
+  <br/>
+  <br/>
+  <div id="plot">
+  </div>
+  <br/>
+  <div id="map">
+  </div>
+</body>
+</html>
